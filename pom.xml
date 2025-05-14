@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>app</module>
-        <module>sender</module>
+        <module>gui</module>
     </modules>
 
     <properties>

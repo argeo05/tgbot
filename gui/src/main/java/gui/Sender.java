@@ -1,5 +1,6 @@
 package gui;
 
+import utils.TelegramLauncher;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.InputEvent;
@@ -17,8 +18,8 @@ public class Sender {
 
     private Robot robot;
     private static final int DEFAULT_DELAY_SECONDS = 5;
-    private static final int TYPING_DELAY_MS = 100;
-    private static final int ACTION_DELAY_MS = 500;
+    private static final int TYPING_DELAY_MS = 10;
+    private static final int ACTION_DELAY_MS = 60;
 
     public Sender() {
         try {
@@ -29,21 +30,9 @@ public class Sender {
         }
     }
 
-    public void startSending() {
-        MouseCollector mouseCollector = new MouseCollector();
-        Point searchBarCoordinates = mouseCollector.setupCoordinatesWithGlobalHotkey("строки поиска пользователей Telegram");
-
-        if (searchBarCoordinates == null) {
-            System.out.println("Координаты строки поиска не были захвачены. Отправка отменена.");
-            return;
-        }
-        System.out.println("Координаты строки поиска: X=" + searchBarCoordinates.x + ", Y=" + searchBarCoordinates.y);
-
-        MessageCollector messageCollector = new MessageCollector(null);
-        MessageCollector.TelegramUserInput userInput = messageCollector.collectData();
-
-        if (userInput == null) {
-            System.out.println("Ввод данных для рассылки был отменен. Отправка отменена.");
+    public void startSending(MessageCollector.TelegramUserInput userInput, Point searchBarCoordinates) {
+        if (!TelegramLauncher.launchTelegram()) {
+            System.out.println("Не удалось запустить Telegram или процесс был отменен. Отправка сообщений не будет выполнена.");
             return;
         }
 
@@ -60,6 +49,7 @@ public class Sender {
 
         System.out.println("Начинаем рассылку...");
         Random random = new Random();
+        robot.delay(1000);
 
         for (String userId : userIds) {
             if (userId == null || userId.trim().isEmpty()) {
@@ -70,16 +60,17 @@ public class Sender {
 
             try {
                 robot.mouseMove(searchBarCoordinates.x, searchBarCoordinates.y);
-                robot.delay(ACTION_DELAY_MS);
+                robot.delay(ACTION_DELAY_MS / 2);
                 robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
                 robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
                 robot.delay(ACTION_DELAY_MS);
 
-                robot.keyPress(KeyEvent.VK_CONTROL);
+                int selectAllKey = osUsesCommandInsteadOfControl() ? KeyEvent.VK_META : KeyEvent.VK_CONTROL;
+                robot.keyPress(selectAllKey);
                 robot.keyPress(KeyEvent.VK_A);
                 robot.delay(TYPING_DELAY_MS);
                 robot.keyRelease(KeyEvent.VK_A);
-                robot.keyRelease(KeyEvent.VK_CONTROL);
+                robot.keyRelease(selectAllKey);
                 robot.delay(ACTION_DELAY_MS);
 
                 robot.keyPress(KeyEvent.VK_DELETE);
@@ -93,7 +84,7 @@ public class Sender {
                 robot.keyPress(KeyEvent.VK_ENTER);
                 robot.delay(TYPING_DELAY_MS);
                 robot.keyRelease(KeyEvent.VK_ENTER);
-                robot.delay(ACTION_DELAY_MS * 2);
+                robot.delay(ACTION_DELAY_MS * 3 + (userId.length() * 20));
 
                 pasteText(message);
                 robot.delay(ACTION_DELAY_MS);
@@ -103,21 +94,29 @@ public class Sender {
                 robot.keyRelease(KeyEvent.VK_ENTER);
                 System.out.println("Сообщение для " + userId + " отправлено.");
 
+                long delayMilliseconds;
                 if (useRandomDelay) {
-                    int delaySeconds = random.nextInt(maxRandomDelaySeconds) + 1;
-                    System.out.println("Случайная задержка: " + delaySeconds + " сек.");
-                    TimeUnit.SECONDS.sleep(delaySeconds);
+                    int randomSeconds = (maxRandomDelaySeconds > 0) ? (random.nextInt(maxRandomDelaySeconds) + 1) : 1;
+                    System.out.println("Случайная задержка: " + randomSeconds + " сек.");
+                    delayMilliseconds = TimeUnit.SECONDS.toMillis(randomSeconds);
                 } else {
                     System.out.println("Стандартная задержка: " + DEFAULT_DELAY_SECONDS + " сек.");
-                    TimeUnit.SECONDS.sleep(DEFAULT_DELAY_SECONDS);
+                    delayMilliseconds = TimeUnit.SECONDS.toMillis(DEFAULT_DELAY_SECONDS);
                 }
+                delayMilliseconds += random.nextInt(500) + 100;
+                robot.delay((int)delayMilliseconds);
 
-            } catch (InterruptedException e) {
-                System.err.println("Отправка была прервана: " + e.getMessage());
-                Thread.currentThread().interrupt();
-                return;
             } catch (Exception e) {
                 System.err.println("Произошла ошибка при отправке сообщения пользователю " + userId + ": " + e.getMessage());
+                e.printStackTrace();
+                try {
+                    System.out.println("Попытка восстановиться и продолжить со следующим пользователем...");
+                    TimeUnit.SECONDS.sleep(DEFAULT_DELAY_SECONDS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    System.err.println("Рассылка прервана во время восстановления после ошибки.");
+                    return;
+                }
             }
         }
         System.out.println("Рассылка завершена.");
@@ -143,20 +142,21 @@ public class Sender {
         try {
             StringSelection stringSelection = new StringSelection(text);
             Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringSelection, null);
+            robot.delay(100);
 
-            robot.keyPress(KeyEvent.VK_CONTROL);
+            int pasteKey = osUsesCommandInsteadOfControl() ? KeyEvent.VK_META : KeyEvent.VK_CONTROL;
+
+            robot.keyPress(pasteKey);
             robot.keyPress(KeyEvent.VK_V);
             robot.delay(TYPING_DELAY_MS);
             robot.keyRelease(KeyEvent.VK_V);
-            robot.keyRelease(KeyEvent.VK_CONTROL);
+            robot.keyRelease(pasteKey);
         } catch (Exception e) {
             System.err.println("Ошибка при вставке текста из буфера обмена: " + e.getMessage());
         }
     }
 
-    public static void main(String[] args) {
-        Sender sender = new Sender();
-        sender.startSending();
-        System.exit(0);
+    private boolean osUsesCommandInsteadOfControl() {
+        return System.getProperty("os.name").toLowerCase().contains("mac");
     }
 }

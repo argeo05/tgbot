@@ -9,12 +9,20 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>sender</artifactId>
+    <artifactId>gui</artifactId>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.kwhat</groupId>
+            <artifactId>jnativehook</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+    </dependencies>
 
 </project>

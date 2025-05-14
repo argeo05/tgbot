@@ -8,6 +8,8 @@ import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyAdapter;
+import utils.TelegramLauncher;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,6 +23,10 @@ public class MouseCollector {
     private JLabel coordsLabel;
 
     public Point setupCoordinatesWithGlobalHotkey(String targetName) {
+        if (!TelegramLauncher.launchTelegram()) {
+            System.out.println("Не удалось запустить Telegram или процесс был отменен.");
+        }
+
         final JDialog helperDialog = new JDialog((Frame) null, "Захват координат (глобальный F12)", true);
         helperDialog.setLayout(new BorderLayout(10, 10));
         helperDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);

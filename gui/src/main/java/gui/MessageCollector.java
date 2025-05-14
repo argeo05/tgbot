@@ -1,4 +1,4 @@
-package gui; // Вы можете изменить пакет на ваш
+package gui;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -50,9 +50,9 @@ public class MessageCollector {
     private File selectedIdFile;
     private TelegramUserInput userInputResult = null;
 
-    private static final int SLIDER_MIN_DELAY = 1;    // Минимальная задержка в секундах
-    private static final int SLIDER_MAX_DELAY = 300;  // Максимальная задержка в секундах (5 минут)
-    private static final int SLIDER_DEFAULT_DELAY = 10; // Задержка по умолчанию
+    private static final int SLIDER_MIN_DELAY = 1;
+    private static final int SLIDER_MAX_DELAY = 300;
+    private static final int SLIDER_DEFAULT_DELAY = 10;
 
     public MessageCollector(Frame owner) {
         dialog = new JDialog(owner, "Ввод данных для Telegram рассылки", true);
@@ -67,35 +67,33 @@ public class MessageCollector {
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
-        // --- Файл с ID ---
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.gridwidth = 3; // Заголовок на всю ширину
+        gbc.gridwidth = 3;
         dialog.add(new JLabel("Файл с ID пользователей:"), gbc);
 
         filePathField = new JTextField(30);
         filePathField.setEditable(false);
         gbc.gridx = 0;
         gbc.gridy = 1;
-        gbc.gridwidth = 2; // Поле занимает 2 колонки
+        gbc.gridwidth = 2;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         dialog.add(filePathField, gbc);
 
         JButton browseButton = new JButton("Обзор...");
         browseButton.addActionListener(this::browseForFileAction);
-        gbc.gridx = 2; // Кнопка в 3-й колонке
+        gbc.gridx = 2;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
         gbc.weightx = 0;
         gbc.fill = GridBagConstraints.NONE;
         dialog.add(browseButton, gbc);
 
-        // --- Сообщение ---
         gbc.gridx = 0;
         gbc.gridy = 2;
         gbc.gridwidth = 3;
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Сброс fill для JLabel
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         dialog.add(new JLabel("Сообщение для рассылки:"), gbc);
 
         messageArea = new JTextArea(7, 30);
@@ -107,58 +105,53 @@ public class MessageCollector {
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.gridwidth = 3;
-        gbc.weighty = 0.8; // Даем текстовому полю немного веса для растягивания
+        gbc.weighty = 0.8;
         gbc.fill = GridBagConstraints.BOTH;
         dialog.add(scrollPane, gbc);
 
-        // --- Рандомизированная задержка (чекбокс) ---
         randomDelayCheckbox = new JCheckBox("Рандомизированное время отправки");
         randomDelayCheckbox.addItemListener(this::randomDelayCheckboxChanged);
         gbc.gridx = 0;
         gbc.gridy = 4;
         gbc.gridwidth = 3;
-        gbc.weighty = 0; // Сброс веса
+        gbc.weighty = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         dialog.add(randomDelayCheckbox, gbc);
 
-        // --- Ползунок для максимальной задержки ---
         JLabel maxDelayLabelText = new JLabel("Макс. задержка (сек):");
         gbc.gridx = 0;
         gbc.gridy = 5;
         gbc.gridwidth = 1;
-        gbc.fill = GridBagConstraints.NONE; // Сброс fill для JLabel
+        gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.EAST;
         dialog.add(maxDelayLabelText, gbc);
 
         delaySlider = new JSlider(JSlider.HORIZONTAL, SLIDER_MIN_DELAY, SLIDER_MAX_DELAY, SLIDER_DEFAULT_DELAY);
-        delaySlider.setMajorTickSpacing(SLIDER_MAX_DELAY / 6); // Примерное деление на 6 крупных тиков
-        delaySlider.setMinorTickSpacing(SLIDER_MAX_DELAY / 30); // Примерное деление на 30 мелких тиков
+        delaySlider.setMajorTickSpacing(SLIDER_MAX_DELAY / 6);
+        delaySlider.setMinorTickSpacing(SLIDER_MAX_DELAY / 30);
         delaySlider.setPaintTicks(true);
-        // delaySlider.setPaintLabels(true); // Можно включить, если нужно отображение цифр на ползунке
         delaySlider.addChangeListener(this::delaySliderChanged);
         gbc.gridx = 1;
         gbc.gridy = 5;
         gbc.gridwidth = 1;
-        gbc.weightx = 1.0; // Ползунок растягивается
+        gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.anchor = GridBagConstraints.WEST; // Сброс якоря
+        gbc.anchor = GridBagConstraints.WEST;
         dialog.add(delaySlider, gbc);
 
         sliderValueLabel = new JLabel(SLIDER_DEFAULT_DELAY + " сек");
         gbc.gridx = 2;
         gbc.gridy = 5;
         gbc.gridwidth = 1;
-        gbc.weightx = 0; // Метка не растягивается
+        gbc.weightx = 0;
         gbc.fill = GridBagConstraints.NONE;
         dialog.add(sliderValueLabel, gbc);
 
-        // Изначальное состояние ползунка и метки
         delaySlider.setEnabled(false);
         sliderValueLabel.setEnabled(false);
-        maxDelayLabelText.setEnabled(false); // Также отключаем текстовую метку ползунка
+        maxDelayLabelText.setEnabled(false);
 
 
-        // --- Кнопки управления ---
         JButton okButton = new JButton("OK");
         okButton.addActionListener(this::okAction);
 
@@ -173,7 +166,7 @@ public class MessageCollector {
         buttonPanel.add(cancelButton);
 
         gbc.gridx = 0;
-        gbc.gridy = 6; // Сдвигаем вниз
+        gbc.gridy = 6;
         gbc.gridwidth = 3;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.EAST;
@@ -203,7 +196,6 @@ public class MessageCollector {
         boolean selected = (e.getStateChange() == ItemEvent.SELECTED);
         delaySlider.setEnabled(selected);
         sliderValueLabel.setEnabled(selected);
-        // Также включаем/отключаем текстовую метку для ползунка
         Component[] components = dialog.getContentPane().getComponents();
         for (Component component : components) {
             if (component instanceof JLabel && ((JLabel) component).getText().startsWith("Макс. задержка")) {
@@ -215,10 +207,10 @@ public class MessageCollector {
 
     private void delaySliderChanged(ChangeEvent e) {
         JSlider source = (JSlider) e.getSource();
-        if (!source.getValueIsAdjusting()) { // Обновляем, когда пользователь отпустил ползунок
+        if (!source.getValueIsAdjusting()) {
             sliderValueLabel.setText(source.getValue() + " сек");
-        } else { // Можно показывать текущее значение во время перетаскивания
-            sliderValueLabel.setText(source.getValue() + " сек*"); // Например, со звездочкой
+        } else {
+            sliderValueLabel.setText(source.getValue() + " сек*");
         }
     }
 
@@ -249,13 +241,12 @@ public class MessageCollector {
         if (this.filePathField != null) this.filePathField.setText("");
         if (this.messageArea != null) this.messageArea.setText("");
         if (this.randomDelayCheckbox != null) {
-            this.randomDelayCheckbox.setSelected(false); // Сброс чекбокса
+            this.randomDelayCheckbox.setSelected(false);
         }
-        // Состояние ползунка и его метки обновится через слушатель randomDelayCheckbox
         if (this.delaySlider != null) {
             this.delaySlider.setValue(SLIDER_DEFAULT_DELAY);
         }
-        if (this.sliderValueLabel != null && this.delaySlider != null) { // Обновляем метку при сбросе
+        if (this.sliderValueLabel != null && this.delaySlider != null) {
             this.sliderValueLabel.setText(this.delaySlider.getValue() + " сек");
         }
 
@@ -266,7 +257,6 @@ public class MessageCollector {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Для лучшего вида можно попробовать установить LookAndFeel системы
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
